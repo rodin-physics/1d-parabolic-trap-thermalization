@@ -1,5 +1,5 @@
 using Distributed
-
+using Random
 proc_num = 8
 addprocs(proc_num - nprocs())
 
@@ -41,6 +41,8 @@ qs = range(0, π / 2, length = round(n_masses / 2) |> Integer)
 for ii = 1:length(ΩTs)
     println(ii)
     ΩT = ΩTs[ii]
+    # Seeding the RNG
+    Random.seed!(150)
     ϕs = 2 * π * rand(length(qs))
     ζs = ζq.(Ωs, ΩT, ħ)
     rHs = @showprogress pmap(n -> ζH(n, δ, ζs, ϕs, Ωs) / √(m), 1:n_pts)
