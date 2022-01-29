@@ -1,6 +1,6 @@
 using Distributed
 
-proc_num = 8
+proc_num = 9
 addprocs(proc_num - nprocs())
 
 @everywhere include("../src/main.jl")
@@ -51,6 +51,42 @@ t_max = τ * t_M                         # Simulation time
     end
 end
 
+s = [1 / 4]
+F = [-4, -2, -1, -1/2, 1/2, 1,2,4]
+parameters = [(x, y) for x in s, y in F] |> vec
+
+x0 = [10]
+
+mem = Inf
+τ = 250
+t_max = τ * t_M                         # Simulation time
+
+@showprogress pmap(parameters) do param
+    s = param[1]
+    F = param[2]
+
+    m = system.m |> Float64
+    k = system.k |> Float64
+    K = system.K |> Float64
+    δ = system.δ |> Float64
+
+    n_pts = floor(t_max / δ) |> Int  # Number of time steps given t_max and δ
+    rHs = zeros(n_pts)
+
+    tTraj = ThermalTrajectory(k, K, m, δ, rHs, nothing, ħ)
+    if (
+        !isfile(
+            "data/Single_Non_Thermal/Single_R0$(x0)_Mem$(mem)TM_s$(s)_F$(F)_m$(m)_d$(d)_ΩT$(nothing)_τ$(τ).jld2",
+        )
+    )
+        res = motion_solver(system, F, s, M, K_M, x0, tTraj, mem, τ)
+        save_object(
+            "data/Single_Non_Thermal/Single_R0$(x0)_Mem$(mem)TM_s$(s)_F$(F)_m$(m)_d$(d)_ΩT$(nothing)_τ$(τ).jld2",
+            res,
+        )
+    end
+end
+
 ## Mass Dependence
 
 systems = [
@@ -59,7 +95,7 @@ systems = [
     load_object("precomputed/systems/System_K1_k20_m1.0_d60.jld2"),
 ]
 
-s = 1 / 4
+s = 1 / 16
 F = -1
 
 x0 = [10]

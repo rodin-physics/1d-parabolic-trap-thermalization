@@ -70,11 +70,11 @@ xlims!(ax1, (-1, 10))
 # ylims!(ax1, (-6, 1))
 
 files = [
-    "data/Multi_Thermal/Multi_25_Mem0.0TM_s0.25_F1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_Mem0.0TM_s0.25_F1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_Mem0.0TM_s0.25_F1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_Mem0.0TM_s0.25_F1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_Mem0.0TM_s0.25_F1_m1.0_d60_ΩT1000.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT50.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT100.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT250.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT500.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT1000.0_τ1000.jld2",
 ]
 for ii = 1:length(files)
     filename = files[ii]
@@ -111,11 +111,11 @@ xlims!(ax3, (-5, 10))
 # ylims!(ax1, (-6, 1))
 
 files = [
-    "data/Multi_Thermal/Multi_25_Mem0.0TM_s0.25_F-1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_Mem0.0TM_s0.25_F-1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_Mem0.0TM_s0.25_F-1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_Mem0.0TM_s0.25_F-1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_Mem0.0TM_s0.25_F-1_m1.0_d60_ΩT1000.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F-1_m1.0_d60_ΩT50.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F-1_m1.0_d60_ΩT100.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F-1_m1.0_d60_ΩT250.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F-1_m1.0_d60_ΩT500.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F-1_m1.0_d60_ΩT1000.0_τ1000.jld2",
 ]
 for ii = 1:length(files)
     filename = files[ii]

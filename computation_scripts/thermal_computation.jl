@@ -15,11 +15,11 @@ tTraj = [
     load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT2.0_τ1000_hbar0.005.jld2"),
     load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT5.0_τ1000_hbar0.005.jld2"),
     load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT10.0_τ1000_hbar0.005.jld2"),
-    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT50_τ1000_hbar0.005.jld2"),
-    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT100_τ1000_hbar0.005.jld2"),
-    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT250_τ1000_hbar0.005.jld2"),
-    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT500_τ1000_hbar0.005.jld2"),
-    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT1000_τ1000_hbar0.005.jld2"),
+    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT50.0_τ1000_hbar0.005.jld2"),
+    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT100.0_τ1000_hbar0.005.jld2"),
+    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT250.0_τ1000_hbar0.005.jld2"),
+    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT500.0_τ1000_hbar0.005.jld2"),
+    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT1000.0_τ1000_hbar0.005.jld2"),
 ]
 
 mems = [Inf, 50, 1, 0.05, 0]
@@ -62,11 +62,11 @@ d = 60
 tTraj = [
     load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT5.0_τ1000_hbar0.005.jld2"),
     load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT10.0_τ1000_hbar0.005.jld2"),
-    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT50_τ1000_hbar0.005.jld2"),
-    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT100_τ1000_hbar0.005.jld2"),
-    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT250_τ1000_hbar0.005.jld2"),
-    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT500_τ1000_hbar0.005.jld2"),
-    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT1000_τ1000_hbar0.005.jld2"),
+    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT50.0_τ1000_hbar0.005.jld2"),
+    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT100.0_τ1000_hbar0.005.jld2"),
+    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT250.0_τ1000_hbar0.005.jld2"),
+    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT500.0_τ1000_hbar0.005.jld2"),
+    load_object("precomputed/rH/rH_K1_k20_m1_d60_ΩT1000.0_τ1000_hbar0.005.jld2"),
 ]
 
 mems = [0, 0.05, Inf]

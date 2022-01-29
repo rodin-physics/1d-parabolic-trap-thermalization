@@ -187,10 +187,10 @@ function motion_solver(
     Rs[1, :] = x0              # Initialize the starting R
     Rs[2, :] = x0              # Starting at rest
     # Initialize the interaction terms
-    U_pr_mob[1, :] = dU_dR.(rHs[1], x0)
-    U_pr_mob[2, :] = dU_dR.(rHs[2], x0)
-    U_pr_chain[1] = sum(dU_dr.(rHs[1], x0))
-    U_pr_chain[2] = sum(dU_dr.(rHs[2], x0))
+    U_pr_mob[1, :] = Symbolics.value.(dU_dR.(rHs[1], x0))
+    U_pr_mob[2, :] = Symbolics.value.(dU_dR.(rHs[2], x0))
+    U_pr_chain[1] = sum(Symbolics.value.(dU_dr.(rHs[1], x0)))
+    U_pr_chain[2] = sum(Symbolics.value.(dU_dr.(rHs[2], x0)))
     # Initialize the positions of the mobile particle
     rs[1] = rHs[1]
     rs[2] = rHs[2]
@@ -211,8 +211,8 @@ function motion_solver(
         Rs[nxt, :] =
             δ^2 / M .* (-U_pr_mob[curr, :] - K_M .* Rs[curr, :]) + 2 .* Rs[curr, :] -
             Rs[curr-1, :]
-        U_pr_chain[nxt] = sum(dU_dr.(rs[nxt], Rs[nxt, :]))
-        U_pr_mob[nxt, :] = dU_dR.(rs[nxt], Rs[nxt, :])
+        U_pr_chain[nxt] = sum(Symbolics.value.(dU_dr.(rs[nxt], Rs[nxt, :])))
+        U_pr_mob[nxt, :] = Symbolics.value.(dU_dR.(rs[nxt], Rs[nxt, :]))
     end
 
     return SystemSolution(

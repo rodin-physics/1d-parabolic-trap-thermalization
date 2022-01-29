@@ -1,6 +1,6 @@
 using Distributed
 using Random
-proc_num = 8
+proc_num = 9
 addprocs(proc_num - nprocs())
 
 @everywhere include("../src/main.jl")
@@ -20,8 +20,10 @@ ms = [1, 1 / 2, 1 / 4]              # Mass of the chain atoms
 t_max = 1000 * t_M                  # Simulation time
 
 for m in ms
-    res = mkChainSystem(K, k, m, t_max, d)
-    save_object("precomputed/systems/System_K$(K)_k$(k)_m$(m)_d$(d).jld2", res)
+    if (!isfile("precomputed/systems/System_K$(K)_k$(k)_m$(m)_d$(d).jld2"))
+        res = mkChainSystem(K, k, m, t_max, d)
+        save_object("precomputed/systems/System_K$(K)_k$(k)_m$(m)_d$(d).jld2", res)
+    end
 end
 
 ## Precompute the thermal trajectories
@@ -41,14 +43,18 @@ qs = range(0, π / 2, length = round(n_masses / 2) |> Integer)
 for ii = 1:length(ΩTs)
     println(ii)
     ΩT = ΩTs[ii]
-    # Seeding the RNG
-    Random.seed!(150)
-    ϕs = 2 * π * rand(length(qs))
-    ζs = ζq.(Ωs, ΩT, ħ)
-    rHs = @showprogress pmap(n -> ζH(n, δ, ζs, ϕs, Ωs) / √(m), 1:n_pts)
-    res = ThermalTrajectory(k, K, m, δ, rHs, ΩT, ħ)
-    save_object(
-        "precomputed/rH/rH_K$(K)_k$(k)_m$(m)_d$(d)_ΩT$(ΩT)_τ$(τ)_hbar$(ħ).jld2",
-        res,
-    )
+
+    if (!isfile("precomputed/rH/rH_K$(K)_k$(k)_m$(m)_d$(d)_ΩT$(ΩT)_τ$(τ)_hbar$(ħ).jld2"))
+        # Seeding the RNG
+        Random.seed!(150)
+        ϕs = 2 * π * rand(length(qs))
+        ζs = ζq.(Ωs, ΩT, ħ)
+        rHs = @showprogress pmap(n -> ζH(n, δ, ζs, ϕs, Ωs) / √(m), 1:n_pts)
+        res = ThermalTrajectory(k, K, m, δ, rHs, ΩT, ħ)
+        save_object(
+            "precomputed/rH/rH_K$(K)_k$(k)_m$(m)_d$(d)_ΩT$(ΩT)_τ$(τ)_hbar$(ħ).jld2",
+            res,
+        )
+    end
+
 end
