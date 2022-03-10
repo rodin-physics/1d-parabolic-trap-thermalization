@@ -1,6 +1,7 @@
 include("../../src/main.jl")
 
 colors = [my_violet, my_blue, my_green, my_orange, my_red, colorant"rgba(0, 0, 0, 0.35)"]
+step_size = 250
 labs = [
     L"$Ω_T = 1000$",
     L"$Ω_T = 500$",
@@ -35,8 +36,8 @@ ax2 = fig[2, 1] = Axis(fig, xlabel = L"t/t_M", ylabel = L"R_\mathrm{rms}")
 for ii = 1:length(files)
     lines!(
         ax1,
-        times[ii],
-        R_rms[ii] |> vec,
+        times[ii][1:step_size:end],
+        R_rms[ii][1:step_size:end] |> vec,
         color = colors[ii],
         label = labs[ii],
         linewidth = 2,
@@ -65,8 +66,8 @@ R_rms = [sqrt.(mean(x .^ 2, dims = 2)) for x in Rs]
 for ii = 1:length(files)
     lines!(
         ax2,
-        times[ii],
-        R_rms[ii] |> vec,
+        times[ii][1:step_size:end],
+        R_rms[ii][1:step_size:end] |> vec,
         color = colors[ii],
         label = labs[ii],
         linewidth = 2,

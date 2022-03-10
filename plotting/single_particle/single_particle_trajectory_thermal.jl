@@ -18,7 +18,7 @@ let
     ax4 = Axis(fig[4, 1], xlabel = L"t/t_M", ylabel = L"R", limits = (0, 1000, -14, 14))
     ax8 = Axis(fig[4, 2], xlabel = L"t/t_M", ylabel = L"R", limits = (0, 1000, -14, 14))
     ax12 = Axis(fig[4, 3], xlabel = L"t/t_M", ylabel = L"R", limits = (0, 1000, -14, 14))
-
+    step_size = 100
     files = [
         "data/Single_Thermal/Single_R0[10]_MemInfTM_s0.25_F-1_m1.0_d60_ΩT10.0_τ1000.jld2",
         "data/Single_Thermal/Single_R0[10]_Mem50.0TM_s0.25_F-1_m1.0_d60_ΩT10.0_τ1000.jld2",
@@ -46,8 +46,8 @@ let
         idx = findall(x -> x < 1000, data.ts ./ t_M)
         lines!(
             ax[n],
-            data.ts[idx] ./ t_M,
-            data.Rs[idx] |> vec,
+            data.ts[idx][1:step_size:end] ./ t_M,
+            data.Rs[idx][1:step_size:end] |> vec,
             color = colors[n],
             linewidth = 2,
         )
