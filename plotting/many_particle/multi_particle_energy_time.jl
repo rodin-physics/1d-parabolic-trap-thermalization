@@ -8,8 +8,8 @@ files = [
     "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT500.0_τ1000.jld2",
     "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT1000.0_τ1000.jld2",
 ]
-
 colors = [colorant"rgba(0, 0, 0, 0.35)", my_red, my_orange, my_green, my_blue, my_violet]
+step_size = 100
 labs = [L"Ω_T = 10", L"Ω_T = 50", L"Ω_T = 100", L"Ω_T = 250", L"Ω_T = 500", L"Ω_T = 1000"]
 
 fig = Figure(resolution = (1200, 800), font = "CMU Serif", fontsize = 24)
@@ -48,8 +48,8 @@ for ii = 1:length(files)
     tot_en = sum(tot_en, dims = 2) |> vec
     lines!(
         ax1,
-        ts ./ t_M,
-        tot_en ./ prt,
+        ts[1:step_size:end] ./ t_M,
+        tot_en[1:step_size:end] ./ prt,
         color = colors[ii],
         linewidth = 2,
         label = labs[ii],

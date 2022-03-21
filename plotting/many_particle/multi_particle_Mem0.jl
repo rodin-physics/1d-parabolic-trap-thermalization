@@ -6,6 +6,7 @@ ax2 = fig[1, 2] = Axis(fig, xlabel = L"E/\hbar\Omega_T", ylabel = L"\ln[P(E)]")
 ax3 = fig[2, :] = Axis(fig, ylabel = L"E/\hbar\Omega_T", xlabel = L"t/t_M")
 ax4 = fig[3, :] = Axis(fig, ylabel = L"E/\hbar\Omega_T", xlabel = L"t/t_M")
 colors = [my_red, my_orange, my_green, my_blue, my_violet, colorant"rgba(0, 0, 0, 0.35)"]
+step_size = 100
 labs = [L"Ω_T = 50", L"Ω_T = 100", L"Ω_T = 250", L"Ω_T = 500", L"Ω_T = 1000"]
 
 function mkFigure(ax, filename, clr, lab, drop)
@@ -133,8 +134,8 @@ for ii = 1:length(files)
     tot_en = sum(tot_en, dims = 2) |> vec
     lines!(
         ax3,
-        ts ./ t_M,
-        tot_en ./ prt,
+        ts[1:step_size:end] ./ t_M,
+        tot_en[1:step_size:end] ./ prt,
         color = colors[ii],
         linewidth = 2,
         label = labs[ii],
@@ -190,8 +191,8 @@ for ii = 1:length(files)
     tot_en = sum(tot_en, dims = 2) |> vec
     lines!(
         ax4,
-        ts ./ t_M,
-        tot_en ./ prt,
+        ts[1:step_size:end] ./ t_M,
+        tot_en[1:step_size:end] ./ prt,
         color = colors[ii],
         linewidth = 2,
         label = labs[ii],
