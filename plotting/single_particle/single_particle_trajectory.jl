@@ -17,7 +17,7 @@ t_M = 2 * π / ΩM                # Period of the trapped mass
 Rs = data.Rs |> vec
 rs = data.rs
 ts = data.ts ./ t_M
-
+step_size = 100
 let
     fig = Figure(resolution = (1200, 600), font = "CMU Serif", fontsize = 14)
 
@@ -50,8 +50,8 @@ let
         )
     end
     idx = findall(x -> (x <= ax_x_lims[1][2]) && (x >= ax_x_lims[1][1]), ts)
-    lines!(ax[1], ts[idx], Rs[idx], color = my_red, linewidth = 1)
-    lines!(ax[2], ts[idx], rs[idx], color = my_red, linewidth = 1)
+    lines!(ax[1], ts[idx][1:step_size:end], Rs[idx][1:step_size:end], color = my_red, linewidth = 1)
+    lines!(ax[2], ts[idx][1:step_size:end], rs[idx][1:step_size:end], color = my_red, linewidth = 1)
 
     idx = findall(x -> (x <= ax_x_lims[3][2]) && (x >= ax_x_lims[3][1]), ts)
     lines!(ax[3], ts[idx], Rs[idx], color = my_red, linewidth = 1)
