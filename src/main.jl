@@ -8,231 +8,250 @@ using ProgressMeter
 using QuadGK
 using Statistics
 using StatsBase
-using Symbolics
 ## Parameters
 η = 1e-12                       # Small number for integration
-ħ = 1 / 200                     # Planck's constant
-my_red = colorant"rgba(215, 67, 84, 0.75)"
-my_green = colorant"rgba(106, 178, 71, 0.75)"
-my_blue = colorant"rgba(100, 101, 218, 0.75)"
-my_violet = colorant"rgba(169, 89, 201, 0.75)"
-my_orange = colorant"rgba(209, 135, 46, 0.75)"
+## Friendly colors
+my_red = colorant"rgba(204, 121, 167, 0.75)"
+my_vermillion = colorant"rgba(213, 94, 0, 0.75)"
+my_orange = colorant"rgba(230, 159, 0, 0.75)"
+my_yellow = colorant"rgba(240, 228, 66, 0.75)"
+my_green = colorant"rgba(0, 158, 115, 0.75)"
+my_sky = colorant"rgba(86, 180, 233, 0.75)"
+my_blue = colorant"rgba(0, 114, 178, 0.75)"
+my_black = colorant"rgba(0, 0, 0, 0.35)"
 
 ## Types
 struct ChainSystem
-    k::Float64                  # Spring force constant
-    K::Float64                  # Confining force constant
-    m::Float64                  # Mass of the chain atoms
+    ωmin::Float64               # Smallest mode frequency
+    ωmax::Float64               # Largest mode frequency
     δ::Float64                  # Time step
-    G::Vector{Float64}          # Response array. G(0) on the right
+    Γ::Vector{Float64}          # Response array
 end
 
 struct ThermalTrajectory
-    k::Float64                  # Spring force constant
-    K::Float64                  # Confining force constant
-    m::Float64                  # Mass of the chain atoms
+    ωmin::Float64               # Smallest mode frequency
+    ωmax::Float64               # Largest mode frequency
+    μ::Float64                  # Mass of the chain atoms
     δ::Float64                  # Time step
-    rHs::Vector{Float64}        # Thermal Trajectory
-    ΩT::Union{Nothing,Float64}  # Temperature
-    ħ::Float64                  # Planck's constant
+    ρHs::Vector{Float64}        # Thermal trajectory
+    ωT::Union{Nothing,Float64}  # Temperature
 end
 
 struct SystemSolution
-    k::Float64                  # Spring force constant
-    K::Float64                  # Confining force constant
-    m::Float64                  # Mass of the chain atoms
-    ts::Vector{Float64}         # Time steps
-    mem::Float64                # Response array
-    K_M::Float64                # Confining potential
-    M::Float64                  # Mass of the mobile atoms
-    F::Float64                  # Magnitude of the Gaussian potential
-    s::Float64                  # Standard deviation of the potential
-    Rs::Matrix{Float64}         # Positions of the mobile atoms
-    rs::Vector{Float64}         # Positions of the chain atom
-    rHs::Vector{Float64}        # Homogeneous position of the chain atom
-    U_pr_mob::Matrix{Float64}   # Derivatives of the potential for mobile atoms
-    U_pr_chain::Vector{Float64} # Derivative of the potential for the chain atom
-    ΩT::Union{Nothing,Float64}  # Temperature
-    ħ::Float64                  # Planck's constant
+    ωmin::Float64               # Smallest mode frequency
+    ωmax::Float64               # Largest mode frequency
+    μ::Float64                  # Mass of the chain atoms
+    τs::Vector{Float64}         # Time steps
+    τ0::Float64                 # Memory
+    Φ::Float64                  # Magnitude of the Gaussian potential
+    λ::Float64                  # Standard deviation of the potential
+    σs::Matrix{Float64}         # Positions of mobile atoms. 
+    ρs::Vector{Float64}         # Positions of the chain atom
+    ωT::Union{Nothing,Float64}  # Temperature
 end
 
 ## Functions
 # Frequency as a function of momentum
-function Ω(K, k, m, q)
-    return sqrt(4 * k / m * sin(q)^2 + K / m)
-end
-
-# Chain-mass-position correlation function
-function r_corr(t, K, k, m, ΩT)
-    Ωmin = sqrt(K / m)                  # Smallest chain frequency
-    Ωmax = sqrt(4 * k / m + K / m)      # Largest chain frequency
-    int_fun(x) = cos(t * x) / (√((x^2 - Ωmin^2) * (Ωmax^2 - x^2))) * coth(x / (2 * ΩT))
-    res = quadgk(int_fun, Ωmin + η, Ωmax - η)
-    return (res[1] * 2 / π / m * ħ / 2)
+@inline function Ω(ωmin, ωmax, x)
+    return sqrt(ωmin^2 * cos(x)^2 + ωmax^2 * sin(x)^2)
 end
 
 # Chain recoil function
-function G(t, K, k, m)
-    Ωmin = sqrt(K / m)                  # Smallest chain frequency
-    Ωmax = sqrt(4 * k / m + K / m)      # Largest chain frequency
-    int_fun(x) = sin(t * x) / (√((x^2 - Ωmin^2) * (Ωmax^2 - x^2)))
-    res = quadgk(int_fun, Ωmin + η, Ωmax - η)
-    return (res[1] * 2 / π / m)
+function Γ(τ, ωmin, ωmax)
+    int_fun(x) = sin(2 * π * τ * x) / (√((x^2 - ωmin^2) * (ωmax^2 - x^2)))
+    res = quadgk(int_fun, ωmin + η, ωmax - η)
+    return (res[1] * 2 / π)
 end
 
 # Function for assembiling a ChainSystem
-function mkChainSystem(K, k, m, t_max, d)
-    Ωmax = sqrt(4 * k / m + K / m)      # Largest chain frequency
-    δ = (2 * π / Ωmax) / d              # Time step
-    n_pts = floor(t_max / δ) |> Int     # Number of time steps given t_max and δ
+function mkChainSystem(ωmin, ωmax, τ_max, d)
+    δ = (1 / ωmax) / d                  # Time step in units of t_M
+    n_pts = floor(τ_max / δ) |> Int     # Number of time steps given τ_max and δ
     # Precomputing the memory term
-    G_list = @showprogress pmap(jj -> G(δ * jj, K, k, m), 1:n_pts) |> reverse
-    # Note the reversal of G_list. This is done to facilitate the
-    # convolution of G with dU/dr.
-    return ChainSystem(k, K, m, δ, G_list)
+    Γ_list = @showprogress pmap(jj -> Γ(δ * jj, ωmin, ωmax), 1:n_pts)
+    return ChainSystem(ωmin, ωmax, δ, Γ_list)
 end
 
 # Mode amplitude
-function ζq(Ωq, ΩT, ħ)
-    # Subtract a small number from p. The reason is that for low ΩT, p ≈ 1,
+function ζq(ωq, ωT, μ)
+    # Subtract a small number from p. The reason is that for low ωT, p ≈ 1,
     # causing issues with the rand() generator
-    n = rand(Geometric(1 - exp(-Ωq / ΩT) - η))
-    res = √(n + 1 / 2) * √(2 * ħ / Ωq)
+    n = rand(Geometric(1 - exp(-ωq / ωT) - η))
+    res = √(n + 1 / 2) * √(2 / ωq / μ)
     return res
 end
 
-# Homogeneous displacement of the active chain atom at time step n given a set of Ωs
+# Homogeneous displacement of the active chain atom at time step n given a set of ωs
 # and the corresponding ζs and ϕs as a sum of normal coordinates. 
-function ζH(n, δ, ζs, ϕs, Ωs)
+function ζH(n, δ, ζs, ϕs, ωs)
     n_ζ = length(ζs)
-    res = [ζs[x] * cos(δ * n * Ωs[x] + ϕs[x]) / √(n_ζ) for x = 1:n_ζ] |> sum
+    res = [ζs[x] * cos(2 * π * δ * n * ωs[x] + ϕs[x]) / √(n_ζ) for x = 1:n_ζ] |> sum
     return res
 end
 
 # Function that calculates the trajectories of the mobile atoms and the chain particle.
-# mem determines the memory length and τ is the simulation period, both in units of
+# τ0 determines the memory length and τ is the simulation length, both in units of
 # the trap period.
 function motion_solver(
     system::ChainSystem,
-    F::T where {T<:Real},
-    s::T where {T<:Real},
-    M::T where {T<:Real},
-    K_M::T where {T<:Real},
-    x0::Vector{T} where {T<:Real},
+    Φ0::T where {T<:Real},
+    λ::T where {T<:Real},
+    σ0::Vector{T} where {T<:Real},
     tTraj::ThermalTrajectory,
-    mem::T where {T<:Real},
+    τ0::T where {T<:Real},
     τ::T where {T<:Real},
 )
-    m = system.m            # Mass of the chain atoms
-    k = system.k            # Spring force constant
-    K = system.K            # Confining potential force constant
-    δ = system.δ            # Array of time steps
-    G_list = system.G       # Memory term
+    ωmin = system.ωmin      # Spring force constant
+    ωmax = system.ωmax      # Confining potential force constant
+    δ = system.δ            # Time step
+    Γ_list = system.Γ       # Memory term
+    μ = tTraj.μ             # Mass of the mobile particle
     # Check that the thermal trajectory is for the correct system
-    if (m != tTraj.m || k != tTraj.k || K != tTraj.K || δ != tTraj.δ)
+    if (ωmin != tTraj.ωmin || ωmax != tTraj.ωmax || δ != tTraj.δ)
         error("Thermal trajectory describes a different system. Check your input.")
     else
-        rHs = tTraj.rHs
+        ρHs = tTraj.ρHs
     end
 
-    ΩM = √(K_M / M)                     # Trap frequency
-    t_M = 2 * π / ΩM                    # Period of the trapped mass
-    n_pts = floor(τ * t_M / δ) |> Int   # Number of time steps
-    ts = δ .* (1:n_pts) |> collect      # Times
-    if length(rHs) < n_pts
+    n_pts = floor(τ / δ) |> Int         # Number of time steps
+    τs = δ .* (1:n_pts) |> collect      # Times
+    if length(ρHs) < n_pts
         error("Thermal trajectory provided does not span the necessary time range.")
     end
 
-    mem_pts = max(floor(mem * t_M / δ), 1)  # Memory time points.
-    # Even if mem == 0, we have to keep a single time point to make sure arrays work.
-    # For zero memory, the recoil contribution is dropped (see line 208)
+    τ0_pts = max(floor(τ0 / δ), 1)    # Memory time points.
+    # Even if τ0 == 0, we have to keep a single time point to make sure arrays work.
+    # For zero memory, the recoil contribution is dropped (see line 170)
 
     # If the precomputed memory is shorter than the simulation time AND shorter
     # than the desired memory, terminate the calculation.
-    if (length(G_list) < n_pts && length(G_list) < mem_pts)
+    if (length(Γ_list) < n_pts && length(Γ_list) < τ0_pts)
         error("Chosen memory and the simulation time exceed the precomputed range.")
     else
         # The number of memory pts can be limited by the total simulation time.
-        mem_pts = min(mem_pts, n_pts) |> Int
-        G_list_ = G_list[(end-mem_pts+1):end]
+        τ0_pts = min(τ0_pts, n_pts) |> Int
+        Γ_list = (2 * π * δ / μ) .* Γ_list[1:τ0_pts] |> reverse
     end
 
     # Interaction terms
-    @variables r R
-
-    Dr = Differential(r)
-    DR = Differential(R)
-
-    function U(r, R)
-        return (F * exp(-(r - R)^2 / (2 * s^2)))
-    end
-
-    der_r = expand_derivatives(Dr(U(r, R)))
-    der_R = expand_derivatives(DR(U(r, R)))
-
-    function dU_dr(r_, R_)
-        return (substitute.(der_r, (Dict(r => r_, R => R_),))[1])
-    end
-    function dU_dR(r_, R_)
-        return (substitute.(der_R, (Dict(r => r_, R => R_),))[1])
+    function dU_dρ(r)
+        return (-Φ0 * exp(-r^2 / (2 * λ^2)) * r / λ^2)
     end
 
     ## Arrays
-    Rs = zeros(n_pts, length(x0))         # Mobile mass position
-    rs = zeros(n_pts)                     # Chain mass position
-    U_pr_mob = zeros(n_pts, length(x0))   # Force on the mobile particles
+    σs = zeros(n_pts, length(σ0))         # Mobile mass position
+    ρs = ρHs[1:n_pts]                     # Chain mass position
+    U_pr_mob = zeros(n_pts, length(σ0))   # Force on the mobile particles
     U_pr_chain = zeros(n_pts)             # Force on the chain atom
 
     ## Initial values
-    Rs[1, :] = x0              # Initialize the starting R
-    Rs[2, :] = x0              # Starting at rest
+    σs[1, :] = σ0              # Initialize the starting R
+    σs[2, :] = σ0              # Starting at rest
     # Initialize the interaction terms
-    U_pr_mob[1, :] = Symbolics.value.(dU_dR.(rHs[1], x0))
-    U_pr_mob[2, :] = Symbolics.value.(dU_dR.(rHs[2], x0))
-    U_pr_chain[1] = sum(Symbolics.value.(dU_dr.(rHs[1], x0)))
-    U_pr_chain[2] = sum(Symbolics.value.(dU_dr.(rHs[2], x0)))
-    # Initialize the positions of the mobile particle
-    rs[1] = rHs[1]
-    rs[2] = rHs[2]
+    U_pr1 = dU_dρ.(ρs[1] .- σs[1, :])
+    U_pr2 = dU_dρ.(ρs[2] .- σs[2, :])
+    U_pr_mob[1, :] = -U_pr1
+    U_pr_mob[2, :] = -U_pr2
+    U_pr_chain[1] = sum(U_pr1)
+    U_pr_chain[2] = sum(U_pr2)
 
-    @showprogress for ii = 3:n_pts
+    for ii = 3:n_pts
         nxt = ii        # Next time step index
         curr = ii - 1   # Current time step index
         # Get the memory term elements. If the number of elapsed steps is smaller
         # than the number of elements in the memory term, take the corresponding
         # number of the most recent elements
-        Gs = G_list_[(mem_pts-min(mem_pts, curr)+1):end]
+        Γs = Γ_list[(τ0_pts-min(τ0_pts, curr)+1):end]
         # Get the interaction force elements. If the number of elapsed steps is
         # smaller than the number of elements in the memory term, take the available
         # values.
-        Us = U_pr_chain[(curr-min(mem_pts, curr)+1):curr]
+        Us = U_pr_chain[(curr-min(τ0_pts, curr)+1):curr]
         # If mem == 0, drop the recoil contribution
-        rs[nxt] = rHs[nxt] - δ * dot(Gs, Us) * (mem != 0)
-        Rs[nxt, :] =
-            δ^2 / M .* (-U_pr_mob[curr, :] - K_M .* Rs[curr, :]) + 2 .* Rs[curr, :] -
-            Rs[curr-1, :]
-        U_pr_chain[nxt] = sum(Symbolics.value.(dU_dr.(rs[nxt], Rs[nxt, :])))
-        U_pr_mob[nxt, :] = Symbolics.value.(dU_dR.(rs[nxt], Rs[nxt, :]))
+        ρs[nxt] -= dot(Γs, Us) * (τ0 != 0)
+        σs[nxt, :] =
+            (2 * π * δ)^2 .* (-U_pr_mob[curr, :] - σs[curr, :]) + 2 .* σs[curr, :] -
+            σs[curr-1, :]
+        U_pr = dU_dρ.(ρs[nxt] .- σs[nxt, :])
+        U_pr_chain[nxt] = sum(U_pr)
+        U_pr_mob[nxt, :] = -U_pr
+    end
+    return SystemSolution(ωmin, ωmax, μ, τs, τ0, Φ0, λ, σs, ρs, tTraj.ωT)
+end
+
+function motion_solver_SLOW(
+    system::ChainSystem,
+    Φ0::T where {T<:Real},
+    λ::T where {T<:Real},
+    σ0::Vector{T} where {T<:Real},
+    tTraj::ThermalTrajectory,
+    τ0::T where {T<:Real},
+    τ::T where {T<:Real},
+)
+    ωmin = system.ωmin      # Spring force constant
+    ωmax = system.ωmax      # Confining potential force constant
+    δ = system.δ            # Time step
+    Γ_list = system.Γ       # Memory term
+    μ = tTraj.μ             # Mass of the mobile particle
+    # Check that the thermal trajectory is for the correct system
+    if (ωmin != tTraj.ωmin || ωmax != tTraj.ωmax || δ != tTraj.δ)
+        error("Thermal trajectory describes a different system. Check your input.")
+    else
+        ρHs = tTraj.ρHs
     end
 
-    return SystemSolution(
-        k,
-        K,
-        m,
-        ts,
-        mem,
-        K_M,
-        M,
-        F,
-        s,
-        Rs,
-        rs,
-        rHs,
-        U_pr_mob,
-        U_pr_chain,
-        tTraj.ΩT,
-        tTraj.ħ,
-    )
+    n_pts = floor(τ / δ) |> Int         # Number of time steps
+    τs = δ .* (1:n_pts) |> collect      # Times
+    if length(ρHs) < n_pts
+        error("Thermal trajectory provided does not span the necessary time range.")
+    end
+
+    τ0_pts = max(floor(τ0 / δ), 1)    # Memory time points.
+    # Even if τ0 == 0, we have to keep a single time point to make sure arrays work.
+    # For zero memory, the recoil contribution is dropped (see line 156)
+
+    # If the precomputed memory is shorter than the simulation time AND shorter
+    # than the desired memory, terminate the calculation.
+    if (length(Γ_list) < n_pts && length(Γ_list) < τ0_pts)
+        error("Chosen memory and the simulation time exceed the precomputed range.")
+    else
+        # The number of memory pts can be limited by the total simulation time.
+        τ0_pts = min(τ0_pts, n_pts) |> Int
+        Γ_list = (2 * π * δ / μ) .* Γ_list[1:τ0_pts]
+    end
+
+    # Interaction terms
+    function dU_dρ(r)
+        return (-Φ0 * exp(-r^2 / (2 * λ^2)) * r / λ^2)
+    end
+
+    ## Arrays
+
+    σs = zeros(n_pts, length(σ0))           # Mobile mass position
+    ρs = ρHs[1:n_pts]                       # Chain mass position
+
+    # Initial values
+    σs[1, :] = σ0
+    σs[2, :] = σ0
+
+    curr = 1
+    nxt = curr + 2
+    U_pr = dU_dρ.(ρs[curr] .- σs[curr, :])
+    U_pr_chain = sum(U_pr)
+    U_pr_mob = -U_pr
+    ρs[nxt:nxt+min(τ0_pts - 2, n_pts - nxt)] -=
+        Γ_list[2:min(τ0_pts, n_pts - curr)] .* (U_pr_chain * (τ0 != 0))
+    @showprogress for ii = 3:n_pts
+        nxt = ii        # Next time step index
+        curr = ii - 1   # Current time step index
+        U_pr = dU_dρ.(ρs[curr] .- σs[curr, :])
+        U_pr_chain = sum(U_pr)
+        U_pr_mob = -U_pr
+        ρs[nxt:nxt+min(τ0_pts - 1, n_pts - nxt)] -=
+            Γ_list[1:min(τ0_pts, n_pts - curr)] .* (U_pr_chain * (τ0 != 0))
+        σs[nxt, :] =
+            -(2 * π * δ)^2 .* (U_pr_mob + σs[curr, :]) + 2 .* σs[curr, :] - σs[curr-1, :]
+    end
+    return SystemSolution(ωmin, ωmax, μ, τs, τ0, Φ0, λ, σs, ρs, tTraj.ωT)
 end
 
 function auto_corr(l, lag)

@@ -7,54 +7,40 @@ addprocs(proc_num - nprocs())
 
 ## Prepare the ChainSystem's by calculating the recoil term
 
-d = 60                              # Number of time steps in the fastest chain mode
-M = 1 / 2                           # Mass of the mobile particles
-K_M = 1 / 10                        # Trap force constant
-ΩM = √(K_M / M)                     # Trap frequency
-t_M = 2 * π / ΩM                    # Period of the trapped mass
-
-k = 20                              # Spring force constant
-K = 1                               # Confining potential force constant
-
-ms = [1, 1 / 2, 1 / 4]              # Mass of the chain atoms
-t_max = 1000 * t_M                  # Simulation time
-
-for m in ms
-    if (!isfile("precomputed/systems/System_K$(K)_k$(k)_m$(m)_d$(d).jld2"))
-        res = mkChainSystem(K, k, m, t_max, d)
-        save_object("precomputed/systems/System_K$(K)_k$(k)_m$(m)_d$(d).jld2", res)
-    end
+d = 60          # Number of time steps in the fastest chain mode
+ωmin = 2        # Smallest mode frequency
+ωmax = 20       # Largest mode frequency
+τ_max = 1000    # Simulation time
+if (!isfile("precomputed/systems/System_ωmin$(ωmin)_ωmax$(ωmax)_d$(d).jld2"))
+    res = mkChainSystem(ωmin, ωmax, τ_max, d)
+    save_object("precomputed/systems/System_ωmin$(ωmin)_ωmax$(ωmax)_d$(d).jld2", res)
 end
 
 ## Precompute the thermal trajectories
-m = 1                           # Mass of the chain atoms
-τ = 1000;
-t_max = τ * t_M                 # Simulation time
-
-Ωmax = sqrt(4 * k / m + K / m)  # Largest chain frequency
-δ = (2 * π / Ωmax) / d          # Time step
-n_pts = floor(t_max / δ) |> Int # Number of time steps given t_max and δ
+μ = 2.0                         # Mass of the chain atoms
+τ = 1000                        # Time length
+δ = (1 / ωmax) / d              # Time step in units of t_M
+n_pts = floor(τ / δ) |> Int      # Number of time steps given t_max and δ
 
 ## Thermal Trajectory
-n_masses = 1000000              # Number of chain masses for simulating r0
+n_masses = 1000000              # Number of chain masses for simulating ρ0
 qs = range(0, π / 2, length = round(n_masses / 2) |> Integer)
-Ωs = Ω.(K, k, m, qs)
-ΩTs = [1e-5, 1, 2, 5, 10, 20, 50, 100, 150, 250, 500, 1000]
-for ii = 1:length(ΩTs)
+ωs = Ω.(ωmin, ωmax, qs)
+ωTs = [1e-5, 1, 2, 5, 10, 50, 100, 250, 500, 1000, 2500]
+for ii = 1:length(ωTs)
     println(ii)
-    ΩT = ΩTs[ii]
+    ωT = ωTs[ii]
 
-    if (!isfile("precomputed/rH/rH_K$(K)_k$(k)_m$(m)_d$(d)_ΩT$(ΩT)_τ$(τ)_hbar$(ħ).jld2"))
+    if (!isfile("precomputed/rH/rH_ωmin$(ωmin)_ωmax$(ωmax)_μ$(μ)_d$(d)_ωT$(ωT)_τ$(τ).jld2"))
         # Seeding the RNG
         Random.seed!(150)
-        ϕs = 2 * π * rand(length(qs))
-        ζs = ζq.(Ωs, ΩT, ħ)
-        rHs = @showprogress pmap(n -> ζH(n, δ, ζs, ϕs, Ωs) / √(m), 1:n_pts)
-        res = ThermalTrajectory(k, K, m, δ, rHs, ΩT, ħ)
+        ϕs = 2 * π * rand(length(ωs))
+        ζs = ζq.(ωs, ωT, μ)
+        ρHs = @showprogress pmap(n -> ζH(n, δ, ζs, ϕs, ωs), 1:n_pts)
+        res = ThermalTrajectory(ωmin, ωmax, μ, δ, ρHs, ωT)
         save_object(
-            "precomputed/rH/rH_K$(K)_k$(k)_m$(m)_d$(d)_ΩT$(ΩT)_τ$(τ)_hbar$(ħ).jld2",
+            "precomputed/rH/rH_ωmin$(ωmin)_ωmax$(ωmax)_μ$(μ)_d$(d)_ωT$(ωT)_τ$(τ).jld2",
             res,
         )
     end
-
 end
