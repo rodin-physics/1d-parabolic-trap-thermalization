@@ -102,6 +102,9 @@ Full = load_object(
 T50 = load_object(
     "data/Single_Non_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0-500_μ2.0_d60_ωTnothing_τ250.jld2",
 )
+T10 = load_object(
+    "data/Single_Non_Thermal/Single_σ0[100]_τ010.0_λ4_Φ0-500_μ2.0_d60_ωTnothing_τ250.jld2",
+)
 T2 = load_object(
     "data/Single_Non_Thermal/Single_σ0[100]_τ02.0_λ4_Φ0-500_μ2.0_d60_ωTnothing_τ250.jld2",
 )
@@ -154,10 +157,10 @@ ax1 =
     )
 
 τs = Full.τs
-σs = [(x.σs |> vec) for x in [T50, T2, T101, T1, T051, T05, T005, Full]]
-idx = [amp_idx(x) for x in σs]
+σs = [(x.σs |> vec) for x in [T50, T10, T101, T1, T051, T05, T005, Full]]
+idx = [amp_idx(vec(abs.(x))) for x in σs]
 colors = [my_red, my_vermillion, my_orange, my_yellow, my_green, my_sky, my_blue, my_black]
-labs = [L"\tau_0 = 50", L"\tau_0 = 2", L"\tau_0 = 1.01", L"\tau_0 = 1", L"\tau_0 = 0.51", L"\tau_0 = 0.50", L"\tau_0 = 0.05", L"\tau_0 = \infty"]
+labs = [L"\tau_0 = 50", L"\tau_0 = 10", L"\tau_0 = 1.01", L"\tau_0 = 1", L"\tau_0 = 0.51", L"\tau_0 = 0.50", L"\tau_0 = 0.05", L"\tau_0 = \infty"]
 
 for ii = 1:length(idx)
     p = σs[ii]
@@ -180,5 +183,6 @@ end
 
 axislegend(ax1, position = :rb, labelsize = 32)
 ax1.xticks = [1, 10, 100, 1000]
-fig
+# xlims!(ax1, (4e-1, 250))
+# ylims!(ax1, (1e-3, 1.25))
 save("Memory_Amp.pdf", fig)

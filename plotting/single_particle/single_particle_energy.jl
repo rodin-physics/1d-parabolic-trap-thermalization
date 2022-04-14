@@ -48,11 +48,16 @@ function mkFigure(ax, filename, clr, lab, drop)
         (hist_fit.edges[1])[1:end-1],
         log.(hist_fit.weights),
         color = clr,
-        label = lab,
+        # label = lab,
         markersize = 12,
     )
 
 end
+xlm_rep = (-0.2, 6)
+ylm_rep = (-6, 0.2)
+
+xlm_att = (-2.5, 6)
+ylm_att = (-8, 0.2)
 
 files = [
     "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0500_μ2.0_d60_ωT100.0_τ1000.jld2",
@@ -69,7 +74,9 @@ for ii = 1:length(files)
     mkFigure(ax1, filename, clr, lab, 100000)
 end
 lines!(ax1, collect(0:0.1:7), -collect(0:0.1:7), linewidth = 2, color = :black)
-axislegend(ax1, position = :lb, labelsize = 32)
+# axislegend(ax1, position = :lb, labelsize = 32)
+xlims!(ax1, xlm_rep)
+ylims!(ax1, ylm_rep)
 
 files = [
     "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0500_μ2.0_d60_ωT100.0_τ1000.jld2",
@@ -88,7 +95,10 @@ for ii = 1:length(files)
 end
 
 lines!(ax3, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax3, position = :lb, labelsize = 32)
+# axislegend(ax3, position = :lb, labelsize = 32)
+xlims!(ax3, xlm_rep)
+ylims!(ax3, ylm_rep)
+
 
 files = [
     "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0500_μ2.0_d60_ωT100.0_τ1000.jld2",
@@ -106,7 +116,10 @@ for ii = 1:length(files)
 end
 
 lines!(ax5, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax5, position = :lb, labelsize = 32)
+# axislegend(ax5, position = :lb, labelsize = 32)
+xlims!(ax5, xlm_rep)
+ylims!(ax5, ylm_rep)
+
 
 files = [
     "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0500_μ2.0_d60_ωT100.0_τ1000.jld2",
@@ -122,9 +135,12 @@ for ii = 1:length(files)
     lab = labs[ii]
     mkFigure(ax7, filename, clr, lab, 100000)
 end
+xlims!(ax7, xlm_rep)
+ylims!(ax7, ylm_rep)
+
 
 lines!(ax7, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax7, position = :lb, labelsize = 32)
+# axislegend(ax7, position = :lb, labelsize = 32)
 
 files = [
     "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0-500_μ2.0_d60_ωT100.0_τ1000.jld2",
@@ -142,8 +158,9 @@ for ii = 1:length(files)
 end
 
 lines!(ax2, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax2, position = :lb, labelsize = 32)
-
+# axislegend(ax2, position = :lb, labelsize = 32)
+xlims!(ax2, xlm_att)
+ylims!(ax2, ylm_att)
 
 files = [
     "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0-500_μ2.0_d60_ωT100.0_τ1000.jld2",
@@ -161,7 +178,9 @@ for ii = 1:length(files)
 end
 
 lines!(ax4, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax4, position = :lb, labelsize = 32)
+# axislegend(ax4, position = :lb, labelsize = 32)
+xlims!(ax4, xlm_att)
+ylims!(ax4, ylm_att)
 
 files = [
     "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0-500_μ2.0_d60_ωT100.0_τ1000.jld2",
@@ -179,8 +198,9 @@ for ii = 1:length(files)
 end
 
 lines!(ax6, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax6, position = :lb, labelsize = 32)
-
+# axislegend(ax6, position = :lb, labelsize = 32)
+xlims!(ax6, xlm_att)
+ylims!(ax6, ylm_att)
 
 files = [
     "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0-500_μ2.0_d60_ωT100.0_τ1000.jld2",
@@ -198,7 +218,9 @@ for ii = 1:length(files)
 end
 
 lines!(ax8, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax8, position = :lb, labelsize = 32)
+# axislegend(ax8, position = :lb, labelsize = 32)
+xlims!(ax8, xlm_att)
+ylims!(ax8, ylm_att)
 
-fig
-# save("Single_Energy2.pdf", fig)
+# fig
+save("Single_Energy.pdf", fig)

@@ -80,8 +80,8 @@ parameters = reshape([(t, Φ, τ0) for t in tTraj, Φ in Φs, τ0 in τ0s], (:, 
 ## Calculation
 @showprogress pmap(parameters) do param
     traj = param[1]
-    F = param[2]
-    mem = param[3]
+    Φ0 = param[2]
+    τ0 = param[3]
     if (
         !isfile(
             "data/Multi_Thermal/Multi_$(length(σ0))_τ0$(τ0)_λ$(λ)_Φ0$(Φ0)_μ$(μ)_d$(d)_ωT$(traj.ωT)_τ$(τ).jld2",
@@ -112,8 +112,8 @@ parameters = reshape([(t, Φ, τ0) for t in tTraj, Φ in Φs, τ0 in τ0s], (:, 
 ## Calculation
 @showprogress pmap(parameters) do param
     traj = param[1]
-    F = param[2]
-    mem = param[3]
+    Φ0 = param[2]
+    τ0 = param[3]
     if (
         !isfile(
             "data/Multi_Thermal/WarmingUp_Multi_$(length(σ0))_τ0$(τ0)_λ$(λ)_Φ0$(Φ0)_μ$(μ)_d$(d)_ωT$(traj.ωT)_τ$(τ).jld2",
