@@ -25,3 +25,6 @@ Manifest.toml
 *.pdf
 *.jld2
 .DS_Store
+test.jl
+data_backup
+precomputed_backup

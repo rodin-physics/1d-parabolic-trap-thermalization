@@ -1,42 +1,44 @@
 include("../../src/main.jl")
 
 fig = Figure(resolution = (2400, 1200), font = "CMU Serif", fontsize = 32)
-ax1 = Axis(fig[1, 1], xlabel = L"E/\hbar\Omega_T", ylabel = L"\ln[P(E)]")
-ax2 = Axis(fig[2, 1], xlabel = L"E/\hbar\Omega_T", ylabel = L"\ln[P(E)]")
-ax3 = Axis(fig[1, 2], xlabel = L"E/\hbar\Omega_T", ylabel = L"\ln[P(E)]")
-ax4 = Axis(fig[2, 2], xlabel = L"E/\hbar\Omega_T", ylabel = L"\ln[P(E)]")
-ax5 = Axis(fig[1, 3], xlabel = L"E/\hbar\Omega_T", ylabel = L"\ln[P(E)]")
-ax6 = Axis(fig[2, 3], xlabel = L"E/\hbar\Omega_T", ylabel = L"\ln[P(E)]")
-ax7 = Axis(fig[1, 4], xlabel = L"E/\hbar\Omega_T", ylabel = L"\ln[P(E)]")
-ax8 = Axis(fig[2, 4], xlabel = L"E/\hbar\Omega_T", ylabel = L"\ln[P(E)]")
+ax1 = Axis(fig[1, 1], xlabel = L"E/\omega_T", ylabel = L"\ln[P(E)]")
+ax2 = Axis(fig[2, 1], xlabel = L"E/\omega_T", ylabel = L"\ln[P(E)]")
+ax3 = Axis(fig[1, 2], xlabel = L"E/\omega_T", ylabel = L"\ln[P(E)]")
+ax4 = Axis(fig[2, 2], xlabel = L"E/\omega_T", ylabel = L"\ln[P(E)]")
+ax5 = Axis(fig[1, 3], xlabel = L"E/\omega_T", ylabel = L"\ln[P(E)]")
+ax6 = Axis(fig[2, 3], xlabel = L"E/\omega_T", ylabel = L"\ln[P(E)]")
+ax7 = Axis(fig[1, 4], xlabel = L"E/\omega_T", ylabel = L"\ln[P(E)]")
+ax8 = Axis(fig[2, 4], xlabel = L"E/\omega_T", ylabel = L"\ln[P(E)]")
 
-colors = [my_red, my_orange, my_green, my_blue, my_violet, colorant"rgba(0, 0, 0, 0.35)"]
-labs = [L"Ω_T = 50", L"Ω_T = 100", L"Ω_T = 250", L"Ω_T = 500", L"Ω_T = 1000"]
+colors = [my_vermillion, my_orange, my_green, my_sky, my_blue, my_black]
+labs = [
+    L"\omega_T = 100",
+    L"\omega_T = 250",
+    L"\omega_T = 500",
+    L"\omega_T = 1000",
+    L"\omega_T = 2500",
+]
 
 function mkFigure(ax, filename, clr, lab, drop)
     data = load_object(filename)
 
-    ΩT = data.ΩT
-    F = data.F
-    s = data.s
-    Rs = data.Rs
-    rs = data.rs
-    ts = data.ts
-    δ = ts[2] - ts[1]
-    K_M = data.K_M
-    M = data.M
-    ħ = data.ħ
+    ωT = data.ωT
+    Φ0 = data.Φ
+    λ = data.λ
+    σs = data.σs
+    ρs = data.ρs
+    τs = data.τs
+    δ = τs[2] - τs[1]
 
-    Rs = Rs[drop:end, :]
-    rs = rs[drop:end]
+    σs = σs[drop:end, :]
+    ρs = ρs[drop:end]
 
-    prt = size(Rs)[2]
+    prt = size(σs)[2]
 
-    kin_en = vcat(
-        zeros(1, prt),
-        ((Rs[2:end, :] - Rs[1:(end-1), :]) ./ δ) .^ 2 ./ 2 .* M ./ (ħ * ΩT),
-    )
-    pot_en = (Rs .^ 2 / 2 * K_M + F .* exp.(-(rs .- Rs) .^ 2 ./ (2 * s^2))) ./ (ħ * ΩT)
+    kin_en =
+        vcat(zeros(1, prt), ((σs[2:end, :] - σs[1:(end-1), :]) ./ δ) .^ 2 ./ 2 ./ ωT) ./
+        (2 * pi)^2
+    pot_en = (σs .^ 2 / 2 + Φ0 .* exp.(-(ρs .- σs) .^ 2 ./ (2 * λ^2))) ./ ωT
     tot_en = (pot_en + kin_en) |> vec
 
     hist_fit = fit(Histogram, tot_en, -10:0.05:25)
@@ -46,18 +48,23 @@ function mkFigure(ax, filename, clr, lab, drop)
         (hist_fit.edges[1])[1:end-1],
         log.(hist_fit.weights),
         color = clr,
-        label = lab,
+        # label = lab,
         markersize = 12,
     )
 
 end
+xlm_rep = (-0.2, 6)
+ylm_rep = (-6, 0.2)
+
+xlm_att = (-2.5, 6)
+ylm_att = (-8, 0.2)
 
 files = [
-    "data/Single_Thermal/Single_R0[10]_MemInfTM_s0.25_F1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_MemInfTM_s0.25_F1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_MemInfTM_s0.25_F1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_MemInfTM_s0.25_F1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_MemInfTM_s0.25_F1_m1.0_d60_ΩT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0500_μ2.0_d60_ωT100.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0500_μ2.0_d60_ωT250.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0500_μ2.0_d60_ωT500.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0500_μ2.0_d60_ωT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0500_μ2.0_d60_ωT2500.0_τ1000.jld2",
 ]
 
 for ii = 1:length(files)
@@ -67,15 +74,18 @@ for ii = 1:length(files)
     mkFigure(ax1, filename, clr, lab, 100000)
 end
 lines!(ax1, collect(0:0.1:7), -collect(0:0.1:7), linewidth = 2, color = :black)
-axislegend(ax1, position = :lb, labelsize = 32)
+# axislegend(ax1, position = :lb, labelsize = 32)
+xlims!(ax1, xlm_rep)
+ylims!(ax1, ylm_rep)
 
 files = [
-    "data/Single_Thermal/Single_R0[10]_Mem50.0TM_s0.25_F1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem50.0TM_s0.25_F1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem50.0TM_s0.25_F1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem50.0TM_s0.25_F1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem50.0TM_s0.25_F1_m1.0_d60_ΩT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0500_μ2.0_d60_ωT100.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0500_μ2.0_d60_ωT250.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0500_μ2.0_d60_ωT500.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0500_μ2.0_d60_ωT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0500_μ2.0_d60_ωT2500.0_τ1000.jld2",
 ]
+
 
 for ii = 1:length(files)
     filename = files[ii]
@@ -85,14 +95,17 @@ for ii = 1:length(files)
 end
 
 lines!(ax3, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax3, position = :lb, labelsize = 32)
+# axislegend(ax3, position = :lb, labelsize = 32)
+xlims!(ax3, xlm_rep)
+ylims!(ax3, ylm_rep)
+
 
 files = [
-    "data/Single_Thermal/Single_R0[10]_Mem1.0TM_s0.25_F1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem1.0TM_s0.25_F1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem1.0TM_s0.25_F1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem1.0TM_s0.25_F1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem1.0TM_s0.25_F1_m1.0_d60_ΩT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0500_μ2.0_d60_ωT100.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0500_μ2.0_d60_ωT250.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0500_μ2.0_d60_ωT500.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0500_μ2.0_d60_ωT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0500_μ2.0_d60_ωT2500.0_τ1000.jld2",
 ]
 
 for ii = 1:length(files)
@@ -103,14 +116,17 @@ for ii = 1:length(files)
 end
 
 lines!(ax5, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax5, position = :lb, labelsize = 32)
+# axislegend(ax5, position = :lb, labelsize = 32)
+xlims!(ax5, xlm_rep)
+ylims!(ax5, ylm_rep)
+
 
 files = [
-    "data/Single_Thermal/Single_R0[10]_Mem0.05TM_s0.25_F1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem0.05TM_s0.25_F1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem0.05TM_s0.25_F1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem0.05TM_s0.25_F1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem0.05TM_s0.25_F1_m1.0_d60_ΩT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0500_μ2.0_d60_ωT100.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0500_μ2.0_d60_ωT250.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0500_μ2.0_d60_ωT500.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0500_μ2.0_d60_ωT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0500_μ2.0_d60_ωT2500.0_τ1000.jld2",
 ]
 
 for ii = 1:length(files)
@@ -119,16 +135,19 @@ for ii = 1:length(files)
     lab = labs[ii]
     mkFigure(ax7, filename, clr, lab, 100000)
 end
+xlims!(ax7, xlm_rep)
+ylims!(ax7, ylm_rep)
+
 
 lines!(ax7, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax7, position = :lb, labelsize = 32)
+# axislegend(ax7, position = :lb, labelsize = 32)
 
 files = [
-    "data/Single_Thermal/Single_R0[10]_MemInfTM_s0.25_F-1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_MemInfTM_s0.25_F-1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_MemInfTM_s0.25_F-1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_MemInfTM_s0.25_F-1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_MemInfTM_s0.25_F-1_m1.0_d60_ΩT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0-500_μ2.0_d60_ωT100.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0-500_μ2.0_d60_ωT250.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0-500_μ2.0_d60_ωT500.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0-500_μ2.0_d60_ωT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ0Inf_λ4_Φ0-500_μ2.0_d60_ωT2500.0_τ1000.jld2",
 ]
 
 for ii = 1:length(files)
@@ -139,15 +158,16 @@ for ii = 1:length(files)
 end
 
 lines!(ax2, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax2, position = :lb, labelsize = 32)
-
+# axislegend(ax2, position = :lb, labelsize = 32)
+xlims!(ax2, xlm_att)
+ylims!(ax2, ylm_att)
 
 files = [
-    "data/Single_Thermal/Single_R0[10]_Mem50.0TM_s0.25_F-1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem50.0TM_s0.25_F-1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem50.0TM_s0.25_F-1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem50.0TM_s0.25_F-1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem50.0TM_s0.25_F-1_m1.0_d60_ΩT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0-500_μ2.0_d60_ωT100.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0-500_μ2.0_d60_ωT250.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0-500_μ2.0_d60_ωT500.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0-500_μ2.0_d60_ωT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ050.0_λ4_Φ0-500_μ2.0_d60_ωT2500.0_τ1000.jld2",
 ]
 
 for ii = 1:length(files)
@@ -158,14 +178,16 @@ for ii = 1:length(files)
 end
 
 lines!(ax4, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax4, position = :lb, labelsize = 32)
+# axislegend(ax4, position = :lb, labelsize = 32)
+xlims!(ax4, xlm_att)
+ylims!(ax4, ylm_att)
 
 files = [
-    "data/Single_Thermal/Single_R0[10]_Mem1.0TM_s0.25_F-1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem1.0TM_s0.25_F-1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem1.0TM_s0.25_F-1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem1.0TM_s0.25_F-1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem1.0TM_s0.25_F-1_m1.0_d60_ΩT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0-500_μ2.0_d60_ωT100.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0-500_μ2.0_d60_ωT250.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0-500_μ2.0_d60_ωT500.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0-500_μ2.0_d60_ωT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ01.0_λ4_Φ0-500_μ2.0_d60_ωT2500.0_τ1000.jld2",
 ]
 
 for ii = 1:length(files)
@@ -176,15 +198,16 @@ for ii = 1:length(files)
 end
 
 lines!(ax6, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax6, position = :lb, labelsize = 32)
-
+# axislegend(ax6, position = :lb, labelsize = 32)
+xlims!(ax6, xlm_att)
+ylims!(ax6, ylm_att)
 
 files = [
-    "data/Single_Thermal/Single_R0[10]_Mem0.05TM_s0.25_F-1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem0.05TM_s0.25_F-1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem0.05TM_s0.25_F-1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem0.05TM_s0.25_F-1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Single_Thermal/Single_R0[10]_Mem0.05TM_s0.25_F-1_m1.0_d60_ΩT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0-500_μ2.0_d60_ωT100.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0-500_μ2.0_d60_ωT250.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0-500_μ2.0_d60_ωT500.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0-500_μ2.0_d60_ωT1000.0_τ1000.jld2",
+    "data/Single_Thermal/Single_σ0[100]_τ00.05_λ4_Φ0-500_μ2.0_d60_ωT2500.0_τ1000.jld2",
 ]
 
 for ii = 1:length(files)
@@ -195,7 +218,9 @@ for ii = 1:length(files)
 end
 
 lines!(ax8, collect(0:0.1:6), -collect(0:0.1:6), linewidth = 2, color = :black)
-axislegend(ax8, position = :lb, labelsize = 32)
+# axislegend(ax8, position = :lb, labelsize = 32)
+xlims!(ax8, xlm_att)
+ylims!(ax8, ylm_att)
 
-fig
+# fig
 save("Single_Energy.pdf", fig)

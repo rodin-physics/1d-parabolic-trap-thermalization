@@ -5,81 +5,41 @@ addprocs(proc_num - nprocs())
 @everywhere include("../src/main.jl")
 
 files = [
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F-1_m1.0_d60_ΩT1000.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F-1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F-1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F-1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F-1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F-1_m1.0_d60_ΩT10.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT1000.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT500.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT250.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT100.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT50.0_τ1000.jld2",
-    "data/Multi_Thermal/Multi_25_MemInfTM_s0.25_F1_m1.0_d60_ΩT10.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_τ0Inf_λ4_Φ0500_μ2.0_d60_ωT100.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_τ0Inf_λ4_Φ0500_μ2.0_d60_ωT250.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_τ0Inf_λ4_Φ0500_μ2.0_d60_ωT500.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_τ0Inf_λ4_Φ0500_μ2.0_d60_ωT1000.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_τ0Inf_λ4_Φ0500_μ2.0_d60_ωT2500.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_τ0Inf_λ4_Φ0-500_μ2.0_d60_ωT100.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_τ0Inf_λ4_Φ0-500_μ2.0_d60_ωT250.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_τ0Inf_λ4_Φ0-500_μ2.0_d60_ωT500.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_τ0Inf_λ4_Φ0-500_μ2.0_d60_ωT1000.0_τ1000.jld2",
+    "data/Multi_Thermal/Multi_25_τ0Inf_λ4_Φ0-500_μ2.0_d60_ωT2500.0_τ1000.jld2",
 ]
 
 for f in files
     data = load_object(f)
 
-    ΩT = data.ΩT
-    F = data.F
-    s = data.s
-    Rs = data.Rs
-    rs = data.rs
-    k = data.k
-    K = data.K
-    ts = data.ts
-    δ = ts[2] - ts[1]
-    K_M = data.K_M
-    M = data.M
-    m = data.m
-    ħ = data.ħ
+    σs = data.σs
+    ρs = data.ρs
+    τs = data.τs
+    δ = τs[2] - τs[1]
 
-    Ωmin = sqrt(K / m)                  # Smallest chain frequency
-    Ωmax = sqrt(4 * k / m + K / m)      # Largest chain frequency
-
-    ΩM = √(K_M / M)                 # Trap frequency
-    t_M = 2 * π / ΩM                # Period of the trapped mass
-
-    times = data.ts ./ t_M
-    Rs = data.Rs
-    rs = data.rs
+    max_τ_index = length(τs) / 10 |> floor |> Int
+    
     nPts = 5000
-    num_τs = length(times) / 10 |> floor |> Int
-    τs = 0:Int(floor(num_τs / nPts)):num_τs |> collect
-    ts_corr = τs * (times[2] - times[1])
-
-    prt = size(Rs)[2]
-
-    kin_en = vcat(
-        zeros(1, prt),
-        ((Rs[2:end, :] - Rs[1:(end-1), :]) ./ δ) .^ 2 ./ 2 .* M ./ (ħ * ΩT),
-    )
-    pot_en = (Rs .^ 2 / 2 * K_M + F .* exp.(-(rs .- Rs) .^ 2 ./ (2 * s^2))) ./ (ħ * ΩT)
-    tot_en = (pot_en + kin_en)
-
+    τs_idx = 0:Int(floor(max_τ_index / nPts)):max_τ_index |> collect
+    τs_corr = τs_idx .* δ
+    
     if (
         !isfile(
-            "data/Correlations/Energy_Corr_F$(data.F)_K$(data.K)_k$(data.k)_m$(data.m)_ΩT$(data.ΩT)_hbar$(data.ħ).jld2",
+            "data/Correlations/Corr_Φ0$(data.Φ)_λ$(data.λ)_μ$(data.μ)_ωT$(data.ωT).jld2",
         )
     )
-        res = @showprogress pmap(x -> auto_corr(tot_en, x), τs)
+        res = @showprogress pmap(x -> auto_corr(σs, x), τs_idx)
         save_object(
-            "data/Correlations/Energy_Corr_F$(data.F)_K$(data.K)_k$(data.k)_m$(data.m)_ΩT$(data.ΩT)_hbar$(data.ħ).jld2",
-            (res, ts_corr),
-        )
-    end
-
-    if (
-        !isfile(
-            "data/Correlations/Corr_F$(data.F)_K$(data.K)_k$(data.k)_m$(data.m)_ΩT$(data.ΩT)_hbar$(data.ħ).jld2",
-        )
-    )
-        res = @showprogress pmap(x -> auto_corr(Rs, x), τs)
-        save_object(
-            "data/Correlations/Corr_F$(data.F)_K$(data.K)_k$(data.k)_m$(data.m)_ΩT$(data.ΩT)_hbar$(data.ħ).jld2",
-            (res, ts_corr),
+            "data/Correlations/Corr_Φ0$(data.Φ)_λ$(data.λ)_μ$(data.μ)_ωT$(data.ωT).jld2",
+            (res, τs_corr),
         )
     end
 end
