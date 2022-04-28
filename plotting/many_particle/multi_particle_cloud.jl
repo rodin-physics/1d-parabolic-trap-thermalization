@@ -163,4 +163,3 @@ ylims!(ax1, (-5, 80))
 ylims!(ax2, (-5, 80))
 
 save("WarmingUp_Cloud_Size.pdf", fig)
-

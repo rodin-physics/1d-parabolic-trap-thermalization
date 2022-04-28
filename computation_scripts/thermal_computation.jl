@@ -56,6 +56,10 @@ end
 system = load_object("precomputed/systems/System_ωmin2_ωmax20_d60.jld2")
 d = 60
 tTraj = [
+    load_object("precomputed/rH/rH_ωmin2_ωmax20_μ2.0_d60_ωT1.0e-5_τ1000.jld2"),
+    load_object("precomputed/rH/rH_ωmin2_ωmax20_μ2.0_d60_ωT1.0_τ1000.jld2"),
+    load_object("precomputed/rH/rH_ωmin2_ωmax20_μ2.0_d60_ωT2.0_τ1000.jld2"),
+    load_object("precomputed/rH/rH_ωmin2_ωmax20_μ2.0_d60_ωT5.0_τ1000.jld2"),
     load_object("precomputed/rH/rH_ωmin2_ωmax20_μ2.0_d60_ωT10.0_τ1000.jld2"),
     load_object("precomputed/rH/rH_ωmin2_ωmax20_μ2.0_d60_ωT50.0_τ1000.jld2"),
     load_object("precomputed/rH/rH_ωmin2_ωmax20_μ2.0_d60_ωT100.0_τ1000.jld2"),

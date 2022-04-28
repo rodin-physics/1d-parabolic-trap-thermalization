@@ -1,4 +1,5 @@
 using Distributed
+using Random
 
 proc_num = 9
 addprocs(proc_num - nprocs())
@@ -122,6 +123,42 @@ mems = [0, 0.05, 0.1, 0.25, 0.5, 0.51, 0.55, 1, 1.01, 1.05, 1.55, 2, 10, 50]
         res = motion_solver(system, Φ0, λ, σ0, tTraj, τ0, τ)
         save_object(
             "data/Single_Non_Thermal/Single_σ0$(σ0)_τ0$(τ0)_λ$(λ)_Φ0$(Φ0)_μ$(μ)_d$(d)_ωT$(nothing)_τ$(τ).jld2",
+            res,
+        )
+    end
+end
+
+
+## Multiparticle
+Φs = [-500, 500]
+λ = 4
+μ = 2.0
+
+# Starting positions of the mobile particles
+Random.seed!(50)
+σ0 = 20 .* randn(25) .+ 100
+τ0 = Inf        # Memory
+d = 60          # Number of time steps for the fastest chain mode
+τ = 1000
+
+@showprogress pmap(Φs) do Φ0
+    ωmin = system.ωmin |> Float64
+    ωmax = system.ωmax |> Float64
+    δ = system.δ |> Float64
+
+    n_pts = floor(τ / δ) |> Int  # Number of time steps given τ and δ
+    ρHs = zeros(n_pts)
+
+    tTraj = ThermalTrajectory(ωmin, ωmax, μ, δ, ρHs, nothing)
+    if (
+        !isfile(
+            "data/Multi_Non_Thermal/Multi_$(length(σ0))_τ0$(τ0)_λ$(λ)_Φ0$(Φ0)_μ$(μ)_d$(d)_ωT$(nothing)_τ$(τ).jld2",
+        )
+    )
+
+        res = motion_solver(system, Φ0, λ, σ0, tTraj, τ0, τ)
+        save_object(
+            "data/Multi_Non_Thermal/Multi_$(length(σ0))_τ0$(τ0)_λ$(λ)_Φ0$(Φ0)_μ$(μ)_d$(d)_ωT$(nothing)_τ$(τ).jld2",
             res,
         )
     end
